@@ -92,6 +92,7 @@ private:
     Point *cell[MAXSNAKESIZE];
     int size;
     char dir;
+    Point fruit;
 
 public:
     Snake()
@@ -151,14 +152,48 @@ public:
             cell[0]->moveRight();
             break;
         }
+
+        for (int i = 0; i < size; i++)
+        {
+            cell[i]->Draw();
+        }
+
+        sleep(100);
     }
 };
 
 int main()
 {
-    Point p(5, 20);
+    Snake snake;
+    char op = '1';
 
-    p.Draw();
+    do
+    {
+        if (_kbhit())
+        {
+            op = getch();
+        }
+        switch (op)
+        {
+        case 'w':
+        case 'W':
+            snake.turnUp();
+            break;
+        case 's':
+        case 'S':
+            snake.turnDown();
+            break;
+        case 'a':
+        case 'A':
+            snake.turnLeft();
+            break;
+        case 'd':
+        case 'D':
+            snake.turnRight();
+            break;
+        }
+
+    } while (op != 'e');
 
     return 0;
 }
