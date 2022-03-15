@@ -3,10 +3,13 @@
 #include <windows.h>
 #include <dos.h>
 #include <time.h>
+#include <vector>
 
 #define MAXSNAKESIZE 100
 #define MAXFRAMEX 119
 #define MAXFRAMEY 29
+
+int DIFF = 100;
 
 using namespace std;
 
@@ -96,7 +99,8 @@ class Point{
 
 class Snake{
 	private:
-		Point * cell[MAXSNAKESIZE]; // array of points to represent snake - povezana lista
+		//Point * cell[MAXSNAKESIZE]; // array of points to represent snake - povezana lista
+		vector<Point*> snakecell;
 		int size; // current size of snake
 		char dir; // current direction of snake
 		Point fruit; 
@@ -106,16 +110,22 @@ class Snake{
 	public:
 		Snake(){
 			size = 1; // default size
-			cell[0] = new Point(20,20); // 20,20 is default position - dinamicna alokacija memorije
-			for( int i=1; i<MAXSNAKESIZE; i++){
-				cell[i] = NULL; // postavljamo sva ostala polja liste/vektora na NULL vrijednost
-			}
+			//cell[0] = new Point(20,20); // 20,20 is default position - dinamicna alokacija memorije
+			snakecell.push_back(new Point(20,20));
+			// for( int i=1; i<MAXSNAKESIZE; i++){
+			// 	cell[i] = NULL; // postavljamo sva ostala polja liste/vektora na NULL vrijednost
+			// }
 			fruit.SetPoint(rand()%MAXFRAMEX, rand()%MAXFRAMEY); // postavljamo vocku na random koordinate
 			state = 0;
 			started = 0;
 		}
+		int GetScore(){
+			return size;
+		}
 		void AddCell(int x, int y){ // dodajemo +1 na rep nakon collisiona - na kraj liste
-			cell[size++] = new Point(x,y);
+			//cell[size++] = new Point(x,y);
+			size++;
+			snakecell.push_back(new Point(x,y));
 		}
 		void TurnUp(){ //funkcije koje mijenjaju smjer
 			if( dir!='s' )
@@ -156,16 +166,21 @@ class Snake{
 		void Move(){
 			// Clear screen
 			system("cls");
+			cout << "SCORE: " <<size;
 			
 			if( state == 0 ){
 				if( !started ){
 					WelcomeScreen();
 					cout<<"\n\nPress any key to start";
+					cout<<"\n\nh - easy";
+					cout<<"\n\nj Medium";
+					cout<<"\n\nk Hard";
 					getch();
 					started = 1;
 					state = 1; 
 				}else{
-					cout<<"\nGame Over";
+					cout<<"\nGame Over"<<endl;
+					cout<<"\nScore: "<< size <<endl;
 					cout<<"\nPress any key to start";
 					getch();
 					state = 1;
@@ -175,22 +190,25 @@ class Snake{
 			
 			// making snake body follow its head
 			for(int i=size-1; i>0; i--){
-				cell[i-1]->CopyPos(cell[i]);
+				//snakecell.push_back(new Point(x,y));
+				snakecell[i-1]->CopyPos(snakecell[i]);
+				
 			}
+
 			
 			// turning snake's head
 			switch(dir){
 				case 'w':
-					cell[0]->MoveUp();
+					snakecell[0]->MoveUp();
 					break;
 				case 's':
-					cell[0]->MoveDown();
+					snakecell[0]->MoveDown();
 					break;
 				case 'a':
-					cell[0]->MoveLeft();
+					snakecell[0]->MoveLeft();
 					break;
 				case 'd':
-					cell[0]->MoveRight();
+					snakecell[0]->MoveRight();
 					break;
 			}
 			
@@ -201,14 +219,14 @@ class Snake{
 				
 			
 			// Collision with fruit
-			if( fruit.GetX() == cell[0]->GetX() && fruit.GetY() == cell[0]->GetY()){
+			if( fruit.GetX() == snakecell[0]->GetX() && fruit.GetY() == snakecell[0]->GetY()){
 				AddCell(0,0);
 				fruit.SetPoint(rand()%MAXFRAMEX, rand()%MAXFRAMEY); 	
 			}
 			
 			//drawing snake
 			for(int i=0; i<size; i++)
-				cell[i]->Draw();
+				snakecell[i]->Draw();
 				
 			SetConsoleTextAttribute(console,242); //font - velicina 
 			if( !blink ) // semafor - svaka druga iteracija
@@ -218,17 +236,17 @@ class Snake{
 			
 			//Debug();
 			
-			Sleep(100); // 100 ms - vrijeme koraka 
+			Sleep(DIFF); // DIFF u ms - vrijeme koraka 
 		}
 		int SelfCollision(){ // Zmija ugrize samu sebe
 			for(int i=1; i<size; i++)
-				if( cell[0]->IsEqual(cell[i]) ) // Usporedujemo je li pozicija glave jednaka nekoj poziciji tijela/repa
+				if( snakecell[0]->IsEqual(snakecell[i]) ) // Usporedujemo je li pozicija glave jednaka nekoj poziciji tijela/repa
 					return 1;
 			return 0;
 		}
 		void Debug(){
 			for( int i=0; i<size; i++){
-				cell[i]->Debug();
+				snakecell[i]->Debug();
 			}
 		}
 };
@@ -246,6 +264,21 @@ int main(){
 			op = getch();
 		}
 		switch(op){
+			case 'h':
+			case 'H':
+				DIFF = 50;
+				break;
+
+			case 'J':
+			case 'j':
+				DIFF = 10;
+				break;
+
+			case 'K':
+			case 'k':
+				DIFF = 0.1;
+				break;
+
 			case 'w':
 			case 'W':
 				snake.TurnUp();
