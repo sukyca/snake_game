@@ -1,50 +1,52 @@
 #include <iostream>
-#include <conio.h>
-#include <windows.h>
-#include <dos.h>
-#include <time.h>
+#include <conio.h> // kbhit, getch etc.
+#include <windows.h> // funkcionalnosti poput HANDLE, COORD etc.
+#include <dos.h> //DISK operating system - Sleep
+#include <time.h> // manipulacija time i date
 #include <vector>
 
-#define MAXFRAMEX 119
-#define MAXFRAMEY 29
+#define MAX_X 119 // granica po x
+#define MAX_Y 29 // granica po y
 
-int DIFF = 100;
+int DIFF = 50; // tezina igre
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
 
-HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-COORD CursorPosition;
+HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // Definiramo standarni output device. STD_OUTPUT_HANDLE je aktivni buffer za console screen https://docs.microsoft.com/en-us/windows/console/console-screen-buffers
+COORD CursorPosition; // definira koordinate karaktera unutar konzole
 
 void gotoxy(int x, int y){
 	CursorPosition.X = x;
 	CursorPosition.Y = y;
-	SetConsoleCursorPosition(console, CursorPosition);
+	SetConsoleCursorPosition(console, CursorPosition); // postavlja poziciju kursora u konzoli
 }
 void setcursor(bool visible, DWORD size) // set bool visible = 0 - invisible, bool visible = 1 - visible
 {
-	if(size == 0) //velicina slova
+	if(size == 0) 
 	{
-		size = 50;	// default cursor size Changing to numbers from 1 to 20, decreases cursor width
+		size = 20;	// default velicina kursora
 	}
 	CONSOLE_CURSOR_INFO lpCursor;	
 	lpCursor.bVisible = visible;
 	lpCursor.dwSize = size;
-	SetConsoleCursorInfo(console,&lpCursor);
+	SetConsoleCursorInfo(console,&lpCursor); // Postavlja velicinu i vidljivost kursora za definiranu konzolu
 }
 
-class Point{
+class Element{
 	private:
 		int y; //velicina grida
 		int x; //velicina grida
 	public:
-		Point(){
+		Element(){
 			x = y = 10;
 		} 
-		Point(int x, int y){
+		Element(int x, int y){
 			this -> y = y;
 			this -> x = x;	
 		}
-		void SetPoint(int x, int y){
+		void SetElement(int x, int y){
 			this -> x = x;
 			this -> y = y;
 		}
@@ -54,39 +56,35 @@ class Point{
 		int GetY(){
 			return y;
 		}
-		void MoveUp(){
+		void Up(){
 			y--;
 			if( y < 0 )
-				y = MAXFRAMEY;
+				y = MAX_Y;
 		}
-		void MoveDown(){
+		void Down(){
 			y++;
-			if( y > MAXFRAMEY )
+			if( y > MAX_Y )
 				y = 0;
 		}
-		void MoveLeft(){
+		void Left(){
 			x--;
 			if( x < 0 )
-				x = MAXFRAMEX;
+				x = MAX_X;
 		}
-		void MoveRight(){
+		void Right(){
 			x++;
-			if( x > MAXFRAMEX )
+			if( x > MAX_X )
 				x = 0;
 		}
 		void Draw(char ch='O'){
 			gotoxy(x,y);
 			cout<<ch;
 		}
-		void Erase(){
-			gotoxy(x,y);
-			cout<<" ";
-		}
-		void CopyPos(Point * p){ // Svaki element zmije ima svoj pokazivac 'p' - argument -> polje
+		void CopyPosition(Element * p){ // Svaki element zmije ima svoj pokazivac 'p' - argument -> polje
 			p->x = x;
 			p->y = y;
 		}
-		int IsEqual(Point * p){
+		int Equal(Element * p){
 			if( p->x == x && p->y ==y )
 				return 1;
 			return 0;
@@ -98,52 +96,44 @@ class Point{
 
 class Snake{
 	private:
-		//Point * cell[MAXSNAKESIZE]; // array of points to represent snake - povezana lista
-		vector<Point*> snakecell;
-		int size; // current size of snake
-		char dir; // current direction of snake
-		Point fruit; 
-		int state; // bool representing state of snake i.e. living, dead
-		int started;
-		int blink; // fruit blink
+		vector<Element*> snakecell; // vektor polje zmije
+		int size; // velicina zmije
+		char dir; // smjer zmije - up, down, left, right
+		Element fruit; // objekt vocka
+		int state; // stanje zmije - moze biti aktivna ili neaktivna
+		int started; // stanje igre - moze biti pokrenuta ili cekamo key za pokrenuti igru
+		int blink; // flag za semaphore
 	public:
 		Snake(){
-			size = 1; // default size
-			//cell[0] = new Point(20,20); // 20,20 is default position - dinamicna alokacija memorije
-			snakecell.push_back(new Point(20,20));
-			// for( int i=1; i<MAXSNAKESIZE; i++){
-			// 	cell[i] = NULL; // postavljamo sva ostala polja liste/vektora na NULL vrijednost
-			// }
-			fruit.SetPoint(rand()%MAXFRAMEX, rand()%MAXFRAMEY); // postavljamo vocku na random koordinate
-			state = 0;
-			started = 0;
+			size = 1; // default velicina zmije
+			snakecell.push_back(new Element(20,20)); // dodajemo novi element u polje - u ovom slucaju glavu
+			fruit.SetElement(rand()%MAX_X, rand()%MAX_Y); // postavljamo vocku na random koordinate - mod sa maks. x i y
+			state = 0; // default - zmija nije aktivna
+			started = 0; // default - igra nije zapoceta
 		}
-		int GetScore(){
-			return size;
-		}
-		void AddCell(int x, int y){ // dodajemo +1 na rep nakon collisiona - na kraj liste
-			//cell[size++] = new Point(x,y);
+		void AddCell(int x, int y){ // dodajemo +1 na rep(size) nakon collisiona - na kraj liste
 			size++;
-			snakecell.push_back(new Point(x,y));
+			snakecell.push_back(new Element(x,y));
 		}
 		void TurnUp(){ //funkcije koje mijenjaju smjer
 			if( dir!='s' )
-			dir = 'w'; // w is control key for turning upward
+			dir = 'w'; // w - smjer gore
 		}
 		void TurnDown(){ 
 			if( dir!='w' )
-			dir = 's'; // s is control key for turning downward
+			dir = 's'; // s - smjer dole
 		}
 		void TurnLeft(){ 
 			if( dir!='d' )
-			dir = 'a'; // a is control key for turning left
+			dir = 'a'; // a - smjer lijevo
 		}
 		void TurnRight(){
 			if( dir!='a' )
-			dir = 'd'; // d is control key for turning right
+			dir = 'd'; // d - smjer desno
 		}
-		void WelcomeScreen(){
-			SetConsoleTextAttribute(console,15);
+		void Welcome(){
+			SetConsoleTextAttribute(console,10); // SetConsoleTextAttribute omogucava odabir razlicitih stilova za background i foreground
+			// https://www.asciiart.eu/animals/reptiles/snakes?fbclid=IwAR2FofLi0I40lY1Dr0ahWiTaRB1qdsIdyQbSl5Kg5CmeX-rer0zey0DkGSg
 			cout<<"\n            /^\\/^\\                                             ";
 			cout<<"\n          _|__|  O|                                              ";
 			cout<<"\n \\/     /~     \\_/ \\                                          ";
@@ -163,17 +153,18 @@ class Snake{
 			cout<<"\n                ~--______-~                ~-___-~               ";
 		}
 		void Move(){
-			// Clear screen
-			system("cls");
-			cout << "SCORE: " <<size;
+			system("cls"); // clear screen
+			cout << "SCORE: " <<size; // pratimo score
 			
-			if( state == 0 ){
+			if( state == 0 ){ // menu
 				if( !started ){
-					WelcomeScreen();
+					Welcome();
 					cout<<"\n\nPress any key to start";
-					cout<<"\n\nh - easy";
-					cout<<"\n\nj Medium";
-					cout<<"\n\nk Hard";
+					cout<<"\n\n--CONTROLS--";
+					cout<<"\n\nw - up \t\th - change difficulty to Easy";
+					cout<<"\n\ns - down \tj - change difficulty to Normal";
+					cout<<"\n\na - left \tk - change difficulty to Hard";
+					cout<<"\n\nd - right";
 					getch();
 					started = 1;
 					state = 1; 
@@ -187,60 +178,50 @@ class Snake{
 				}
 			}
 			
-			// making snake body follow its head
-			for(int i=size-1; i>0; i--){
-				//snakecell.push_back(new Point(x,y));
-				snakecell[i-1]->CopyPos(snakecell[i]);
-				
+			for(int i=size-1; i>0; i--){ // zmijino tijeo prati glavu
+				snakecell[i-1]->CopyPosition(snakecell[i]);
 			}
 
-			
-			// turning snake's head
-			switch(dir){
+			switch(dir){ // ponasanje glave zmije
 				case 'w':
-					snakecell[0]->MoveUp();
+					snakecell[0]->Up();
 					break;
 				case 's':
-					snakecell[0]->MoveDown();
+					snakecell[0]->Down();
 					break;
 				case 'a':
-					snakecell[0]->MoveLeft();
+					snakecell[0]->Left();
 					break;
 				case 'd':
-					snakecell[0]->MoveRight();
+					snakecell[0]->Right();
 					break;
 			}
 			
-			if( SelfCollision() )
+			if( SelfCollision() ) // nakon sudara state postavljamo na 0 - zmija neaktivna
 				state = 0;
 				
-			
-				
-			
-			// Collision with fruit
-			if( fruit.GetX() == snakecell[0]->GetX() && fruit.GetY() == snakecell[0]->GetY()){
+			if( fruit.GetX() == snakecell[0]->GetX() && fruit.GetY() == snakecell[0]->GetY()){ // zmija pojede vocku
 				AddCell(0,0);
-				fruit.SetPoint(rand()%MAXFRAMEX, rand()%MAXFRAMEY); 	
+				fruit.SetElement(rand()%MAX_X, rand()%MAX_Y); 	
 			}
 			
-			//drawing snake
-			for(int i=0; i<size; i++)
+			for(int i=0; i<size; i++) // crtanje zmije
 				snakecell[i]->Draw();
 				
-			SetConsoleTextAttribute(console,242); //font - velicina 
+			SetConsoleTextAttribute(console,10); 
 			if( !blink ) // semafor - svaka druga iteracija
-				fruit.Draw('°');
+				fruit.Draw('Q'); // crtanje vocke
 			blink = !blink;
-			SetConsoleTextAttribute(console,252);
+			SetConsoleTextAttribute(console,10);
 			
 			//Debug();
 			
-			Sleep(DIFF); // DIFF u ms - vrijeme koraka 
+			Sleep(DIFF); // DIFF u ms - vrijeme koraka - brzina izvodjenja
 		}
 		int SelfCollision(){ // Zmija ugrize samu sebe
 			for(int i=1; i<size; i++)
-				if( snakecell[0]->IsEqual(snakecell[i]) ) // Usporedujemo je li pozicija glave jednaka nekoj poziciji tijela/repa
-					return 1;
+				if( snakecell[0]->Equal(snakecell[i]) ) // usporedujemo je li pozicija glave jednaka nekoj poziciji tijela/repa
+					return 1; // true
 			return 0;
 		}
 		void Debug(){
@@ -251,12 +232,10 @@ class Snake{
 };
 
 int main(){
-	//random no generation
-	setcursor(0,0);
-	srand( (unsigned)time(NULL)); // SEED ovisno o vremenu - bez toga - random ce biti uvijek isti - sto znaci da ce vocka uvijek biti na istome mjestu
-	
-	// Testing snake 
-	Snake snake;
+	setcursor(0,0); // pozicija kursora
+	srand( (unsigned)time(NULL)); // SEED ovisno o vremenu - bez toga - random ce biti uvijek isti - sto znaci da ce vocka uvijek biti na istome mjestu i imati isti pattern
+
+	Snake snake; //objekt zmija
 	char op = 'l';
 	do{
 		if(kbhit()){ // primamo slovo - spremamo ga u varijablu op
@@ -303,5 +282,3 @@ int main(){
 	
 	return 0;
 }
-
-// THE END
