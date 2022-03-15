@@ -5,7 +5,6 @@
 #include <time.h>
 #include <vector>
 
-#define MAXSNAKESIZE 100
 #define MAXFRAMEX 119
 #define MAXFRAMEY 29
 
@@ -83,7 +82,7 @@ class Point{
 			gotoxy(x,y);
 			cout<<" ";
 		}
-		void CopyPos(Point * p){ // Svaki element zmije ima svoj pokazivac 'p'
+		void CopyPos(Point * p){ // Svaki element zmije ima svoj pokazivac 'p' - argument -> polje
 			p->x = x;
 			p->y = y;
 		}
@@ -230,7 +229,7 @@ class Snake{
 				
 			SetConsoleTextAttribute(console,242); //font - velicina 
 			if( !blink ) // semafor - svaka druga iteracija
-				fruit.Draw('+');
+				fruit.Draw('°');
 			blink = !blink;
 			SetConsoleTextAttribute(console,252);
 			
