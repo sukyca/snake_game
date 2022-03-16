@@ -45,7 +45,7 @@ void Element::Right(){
     if( x > MAX_X )
         x = 0;
 }
-void Element::Draw(char ch='O'){ // funkcija za crtanje
+void Element::Draw(char ch/*='O'*/){ // funkcija za crtanje
     gotoxy(x,y);
     cout<<ch;
 }
