@@ -2,7 +2,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <dos.h>
-#include <time.h> // manipulacija time i date
+#include <time.h>
 #include "define.h"
 #include "element.h"
 #include "snake.h"

@@ -42,7 +42,6 @@ void Snake::TurnRight(){
 }
 void Snake::Welcome(){
     SetConsoleTextAttribute(console,10); // SetConsoleTextAttribute omogucava odabir razlicitih stilova za background i foreground
-    // https://www.asciiart.eu/animals/reptiles/snakes?fbclid=IwAR2FofLi0I40lY1Dr0ahWiTaRB1qdsIdyQbSl5Kg5CmeX-rer0zey0DkGSg
     cout<<"\n            /^\\/^\\                                             ";
     cout<<"\n          _|__|  O|                                              ";
     cout<<"\n \\/     /~     \\_/ \\                                          ";
