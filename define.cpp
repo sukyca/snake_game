@@ -1,7 +1,7 @@
 #include "define.h"
 #include <windows.h> // funkcionalnosti poput HANDLE, COORD etc.
 
-HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // Definiramo standarni output device. STD_OUTPUT_HANDLE je aktivni buffer za console screen https://docs.microsoft.com/en-us/windows/console/console-screen-buffers
+HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // Definiramo standarni output device. STD_OUTPUT_HANDLE je aktivni buffer za console screen
 COORD CursorPosition; // definira koordinate karaktera unutar konzole
 
 void gotoxy(int x, int y){
