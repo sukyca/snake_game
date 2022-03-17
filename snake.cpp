@@ -10,7 +10,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-int DIFF = 50; // tezina 
+int DIFF = 25; // tezina 
 
 
 Snake::Snake(){
